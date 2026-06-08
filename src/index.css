@@ -1,5 +1,6 @@
 /* ── RESET ───────────────────────────────── */
-* { margin: 0; padding: 0; box-sizing: border-box; }
+* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-user-drag: none; }
+img { -webkit-user-drag: none; user-drag: none; }
 
 /* ── VARIABLES ────────────────────────────── */
 :root {
@@ -193,7 +194,6 @@ html, body, #root {
 .win-btn:hover { background: #3a3a3a; color: #fff; }
 .win-btn.close:hover { background: var(--red); color: #000; border-color: var(--red); }
 .win-btn.minimize:hover { background: var(--amber); color: #000; border-color: var(--amber); }
-.win-btn.maximize:hover { background: var(--green); color: #000; border-color: var(--green); }
 
 /* ── MENUBAR ─────────────────────────────── */
 .win-menubar {
@@ -776,4 +776,22 @@ html, body, #root {
 }
 .shake {
   animation: shake 0.15s ease-out;
+}
+
+/* ── CRT POWER-ON (initial window boot animation) ── */
+.crt-power-on {
+  animation: crt-power-on 1.2s ease-out forwards;
+}
+@keyframes crt-power-on {
+  0%   { clip-path: inset(50% 0 50% 0); filter: brightness(8); }
+  12%  { clip-path: inset(38% 0 38% 0); filter: brightness(6); }
+  25%  { clip-path: inset(24% 0 24% 0); filter: brightness(3.5); }
+  45%  { clip-path: inset(10% 0 10% 0); filter: brightness(1.8); }
+  65%  { clip-path: inset(3% 0 3% 0);  filter: brightness(1.2); }
+  78%  { clip-path: inset(0);            filter: brightness(1); }
+  84%  { clip-path: inset(0);            filter: brightness(0.4); transform: scaleX(1.005); }
+  88%  { clip-path: inset(0);            filter: brightness(2);   transform: scaleX(1); }
+  92%  { clip-path: inset(0);            filter: brightness(0.7); }
+  96%  { clip-path: inset(0);            filter: brightness(1.1); transform: scaleX(1.002); }
+  100% { clip-path: inset(0);            filter: brightness(1);   transform: scaleX(1); }
 }

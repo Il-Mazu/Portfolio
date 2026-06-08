@@ -1,6 +1,15 @@
 import { useEffect, useState } from 'react';
 
-export default function Taskbar({ windows, focusedId, onOpenWindow, onToggleStartMenu }) {
+const LABELS = {
+  'win-about': 'about.txt',
+  'win-blog': 'blog.txt',
+  'win-music': 'player.exe',
+  'win-dump': 'dump/',
+  'win-links': 'links.ini',
+  'win-term': 'cmd.exe',
+};
+
+export default function Taskbar({ windows, focusedId, onOpenWindow, onMinimizeWindow, onToggleStartMenu }) {
   const [time, setTime] = useState('--:--');
 
   useEffect(() => {
@@ -15,14 +24,15 @@ export default function Taskbar({ windows, focusedId, onOpenWindow, onToggleStar
     return () => clearInterval(id);
   }, []);
 
-  const entries = [
-    { id: 'win-about', label: 'about.txt' },
-    { id: 'win-blog', label: 'blog.txt' },
-    { id: 'win-music', label: 'player.exe' },
-    { id: 'win-dump', label: 'dump/' },
-    { id: 'win-links', label: 'links.ini' },
-    { id: 'win-term', label: 'cmd.exe' },
-  ];
+  const openEntries = Object.keys(windows).filter(id => windows[id].open);
+
+  const handleTaskClick = (id) => {
+    if (windows[id].visible) {
+      onMinimizeWindow(id);
+    } else {
+      onOpenWindow(id);
+    }
+  };
 
   return (
     <div id="taskbar">
@@ -31,15 +41,15 @@ export default function Taskbar({ windows, focusedId, onOpenWindow, onToggleStar
         START
       </div>
       <div id="taskbar-tasks">
-        {entries.map(e => (
+        {openEntries.map(id => (
           <div
-            key={e.id}
-            id={'task-' + e.id}
-            className={`task-btn ${focusedId === e.id ? 'active' : ''}`}
-            onClick={() => onOpenWindow(e.id)}
+            key={id}
+            id={'task-' + id}
+            className={`task-btn ${focusedId === id ? 'active' : ''}`}
+            onClick={() => handleTaskClick(id)}
           >
             <div className="task-dot" />
-            {e.label}
+            {LABELS[id]}
           </div>
         ))}
       </div>

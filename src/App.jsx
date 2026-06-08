@@ -13,14 +13,19 @@ import TerminalWindow from './components/TerminalWindow';
 import Taskbar from './components/Taskbar';
 import StartMenu from './components/StartMenu';
 import Notification from './components/Notification';
+import ambientSound from '../assets/ASMR - Alien： Isolation - Nap Time near a Computer Console - Ambient Sounds - NO Aliens Aboard! [rPMG0PLmh9s].mp3';
+import macSound from '../assets/Mac OS startup sound Big Sur [coxK3eWG20c].mp3';
+import { fadeIn, fadeOut } from './utils/audio';
+
+const AMBIENT_VOL = 0.06;
 
   const INITIAL_WINDOWS = {
-    'win-about': { visible: true, focused: true,  zIndex: 10, x: 40,  y: 28,  w: 380, h: null },
-    'win-blog':  { visible: false, focused: false, zIndex: 1,  x: 440, y: 28,  w: 330, h: null },
-    'win-music': { visible: false, focused: false, zIndex: 1,  x: 440, y: 300, w: 330, h: null },
-    'win-dump':  { visible: false, focused: false, zIndex: 1,  x: 640, y: 420, w: 700, h: 520 },
-    'win-links': { visible: false, focused: false, zIndex: 1,  x: 320, y: 340, w: 240, h: null },
-    'win-term':  { visible: false, focused: false, zIndex: 1,  x: 780, y: 28,  w: 240, h: null },
+    'win-about': { open: false, visible: false, focused: false, zIndex: 1,  x: 20,  y: 0,   w: 380, h: null },
+    'win-blog':  { open: false, visible: false, focused: false, zIndex: 1,  x: 440, y: 28,  w: 330, h: null },
+    'win-music': { open: false, visible: false, focused: false, zIndex: 1,  x: 440, y: 300, w: 330, h: null },
+    'win-dump':  { open: false, visible: false, focused: false, zIndex: 1,  x: 620, y: 390, w: 480, h: 360 },
+    'win-links': { open: false, visible: false, focused: false, zIndex: 1,  x: 320, y: 340, w: 240, h: null },
+    'win-term':  { open: false, visible: false, focused: false, zIndex: 1,  x: 780, y: 28,  w: 240, h: null },
   };
 
 const TRACKS = [
@@ -40,7 +45,14 @@ export default function App() {
   const [currentTrack, setCurrentTrack] = useState(0);
   const [playing, setPlaying] = useState(true);
   const notifTimer = useRef(null);
-  const [aboutOpacity, setAboutOpacity] = useState(0);
+  const [initialAnimDone, setInitialAnimDone] = useState(false);
+
+  const getResponsiveSizes = useCallback(() => ({
+    aboutW: Math.min(420, Math.round(window.innerWidth * 0.32)),
+    aboutH: window.innerHeight - 32,
+    dumpW: Math.min(400, Math.round(window.innerWidth * 0.22)),
+    dumpH: Math.min(300, Math.round(window.innerHeight * 0.24)),
+  }), []);
 
   const showNotif = useCallback((msg) => {
     setNotif(msg);
@@ -108,14 +120,14 @@ export default function App() {
       for (const key of Object.keys(prev)) {
         next[key] = { ...prev[key], focused: key === id };
       }
-      next[id] = { ...cur, visible: true, focused: true, zIndex: zCounter, x: nx, y: ny };
+      next[id] = { ...cur, open: true, visible: true, focused: true, zIndex: zCounter, x: nx, y: ny };
       return next;
     });
     setStartMenuOpen(false);
   }, []);
 
   const closeWindow = useCallback((id) => {
-    setWindows(prev => ({ ...prev, [id]: { ...prev[id], visible: false } }));
+    setWindows(prev => ({ ...prev, [id]: { ...prev[id], open: false, visible: false } }));
   }, []);
 
   const minimizeWindow = useCallback((id) => {
@@ -198,21 +210,103 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  // Fade in about window during boot so it's visible when boot overlay hides
-  useEffect(() => {
-    const t = setTimeout(() => setAboutOpacity(1), 2200);
-    return () => clearTimeout(t);
-  }, []);
-
-  // Open dump window at bottom-right after boot sequence completes
+  // Open about and dump windows with CRT power-on after boot sequence completes
   useEffect(() => {
     if (bootDone) {
-      const w = 700, h = 520;
-      const x = Math.max(0, window.innerWidth - w - 20);
-      const y = Math.max(0, window.innerHeight - 32 - h - 20);
-      openWindow('win-dump', { x, y });
+      const { dumpW, dumpH } = getResponsiveSizes();
+      const bigW = Math.min(500, Math.round(dumpW * 1.25));
+      const bigH = Math.min(375, Math.round(dumpH * 1.25));
+      const dx = Math.max(0, window.innerWidth - bigW - 20);
+      const dy = Math.max(0, window.innerHeight - 32 - bigH - 20);
+      const aboutZ = ++zCounter;
+      const dumpZ = ++zCounter;
+      setWindows(prev => {
+        const next = {};
+        for (const key of Object.keys(prev)) {
+          next[key] = { ...prev[key], focused: key === 'win-dump' };
+        }
+        next['win-about'] = {
+          ...prev['win-about'], open: true, visible: true, focused: false,
+          zIndex: aboutZ,
+        };
+        next['win-dump'] = {
+          ...prev['win-dump'], open: true, visible: true, focused: true,
+          zIndex: dumpZ, x: dx, y: dy, w: bigW, h: bigH,
+        };
+        return next;
+      });
+      setStartMenuOpen(false);
+      setTimeout(() => setInitialAnimDone(true), 1200);
     }
+  }, [bootDone, getResponsiveSizes]);
+
+  // Play Mac startup sound then crossfade to ambient background after boot
+  useEffect(() => {
+    if (!bootDone) return;
+
+    const mac = new Audio(macSound);
+    const ambient = new Audio(ambientSound);
+    ambient.loop = true;
+
+    fadeIn(mac, 0.12, 500);
+
+    let crossfaded = false;
+
+    mac.addEventListener('loadedmetadata', () => {
+      const fadeStart = (mac.duration - 0.8) * 1000;
+      if (fadeStart > 0) {
+        setTimeout(() => {
+          if (!crossfaded) {
+            crossfaded = true;
+            fadeOut(mac, 600);
+            fadeIn(ambient, AMBIENT_VOL, 600);
+          }
+        }, fadeStart);
+      }
+    });
+
+    mac.addEventListener('ended', () => {
+      if (!crossfaded) {
+        crossfaded = true;
+        fadeIn(ambient, AMBIENT_VOL, 400);
+      }
+    });
+
+    return () => {
+      mac.pause();
+      mac.currentTime = 0;
+      ambient.pause();
+      ambient.currentTime = 0;
+    };
   }, [bootDone]);
+
+  // ── Responsive sizing ──
+  useEffect(() => {
+    const updateSizes = () => {
+      const { aboutW, aboutH, dumpW, dumpH } = getResponsiveSizes();
+      setWindows(prev => ({
+        ...prev,
+        'win-about': {
+          ...prev['win-about'],
+          x: 20,
+          y: 0,
+          w: aboutW,
+          h: aboutH,
+        },
+        'win-dump': {
+          ...prev['win-dump'],
+          w: dumpW,
+          h: dumpH,
+          x: Math.min(prev['win-dump'].x, window.innerWidth - dumpW - 20),
+          y: Math.min(prev['win-dump'].y, window.innerHeight - 32 - dumpH - 20),
+        },
+      }));
+    };
+
+    updateSizes();
+    window.addEventListener('resize', updateSizes);
+    return () => window.removeEventListener('resize', updateSizes);
+  }, [getResponsiveSizes]);
 
   // ── Window menubar configurations ──
   const menuFor = (id) => {
@@ -280,6 +374,7 @@ export default function App() {
           <img
             src="/assets/SnapInsta.to_AQP6ityFpUZrqTmrQLvEfDJDLAQZ4IymuY53NRO4PN-QJhqHphA2zinPKk_myDBZjalUVKln64QGcWrenJJqa8UqeibABN51CJXzfv4.gif"
             alt="wallpaper"
+            draggable={false}
           />
         </div>
 
@@ -292,7 +387,7 @@ export default function App() {
           visible={w['win-about'].visible}
           focused={w['win-about'].focused}
           zIndex={w['win-about'].zIndex}
-          style={{ opacity: aboutOpacity, transition: 'opacity 0.4s' }}
+          powerOn={!initialAnimDone}
           onFocus={focusWindow}
           onClose={closeWindow}
           onMinimize={minimizeWindow}
@@ -356,6 +451,7 @@ export default function App() {
           visible={w['win-dump'].visible}
           focused={w['win-dump'].focused}
           zIndex={w['win-dump'].zIndex}
+          powerOn={!initialAnimDone}
           onFocus={focusWindow}
           onClose={closeWindow}
           onMove={moveWindow}
@@ -421,6 +517,7 @@ export default function App() {
         windows={windows}
         focusedId={focusedId}
         onOpenWindow={openWindow}
+        onMinimizeWindow={minimizeWindow}
         onToggleStartMenu={toggleStartMenu}
       />
     </>

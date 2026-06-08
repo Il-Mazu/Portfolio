@@ -8,7 +8,7 @@ export default function Window({
   onFocus, onClose, onMinimize,
   onMove, onResize,
   menubar, statusbar, style: extraStyle,
-  children,
+  powerOn, children,
 }) {
   const winRef = useRef(null);
   const dragRef = useRef(null);
@@ -16,12 +16,6 @@ export default function Window({
 
   const handleMouseDown = useCallback(() => {
     if (onFocus) onFocus(id);
-  }, [id, onFocus]);
-
-  const handleMaximize = useCallback(() => {
-    if (onFocus) onFocus(id);
-    const ev = new CustomEvent('mazu-notif', { detail: '// maximize: coming soon' });
-    window.dispatchEvent(ev);
   }, [id, onFocus]);
 
   const handleTitleMouseDown = useCallback((e) => {
@@ -102,7 +96,7 @@ export default function Window({
     <div
       ref={winRef}
       id={id}
-      className={`window ${focused ? 'focused' : ''}`}
+      className={`window ${focused ? 'focused' : ''}${powerOn ? ' crt-power-on' : ''}`}
       style={{ left: x, top: y, width, height: height || undefined, zIndex, ...extraStyle }}
       onMouseDown={handleMouseDown}
     >
@@ -111,7 +105,6 @@ export default function Window({
         <span className="titlebar-title">{title}</span>
         <div className="win-buttons">
           <div className="win-btn minimize" onClick={() => onMinimize(id)}>_</div>
-          <div className="win-btn maximize" onClick={handleMaximize}>□</div>
           <div className="win-btn close" onClick={() => onClose(id)}>×</div>
         </div>
       </div>

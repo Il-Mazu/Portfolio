@@ -1,4 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
+import bootSound from '../../assets/Old 90s PC boot sequence (4K) [692Z_adAsMQ].mp3';
+import { fadeOut } from '../utils/audio';
 
 const bootMsgs = [
   { text: '[ BIOS ] BOIA-BIOS v1.0a',         delay: 350 },
@@ -28,11 +30,41 @@ export default function Boot({ onComplete }) {
   const [statusLines, setStatusLines] = useState([]);
   const [showCursor, setShowCursor] = useState(true);
   const [hidden, setHidden] = useState(false);
+  const [started, setStarted] = useState(false);
   const doneRef = useRef(false);
   const lineCounter = useRef(0);
+  const onCompleteRef = useRef(onComplete);
+  const audioRef = useRef(null);
+  const btnRef = useRef(null);
+  onCompleteRef.current = onComplete;
+
+  const stopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+    }
+  };
+
+  const skipBoot = () => {
+    if (!doneRef.current) {
+      doneRef.current = true;
+      setHidden(true);
+      fadeOut(audioRef.current, 600);
+      setTimeout(() => onCompleteRef.current?.(), 600);
+    }
+  };
+
+  const startBoot = () => setStarted(true);
 
   useEffect(() => {
+    if (!started) return;
+
     let cancelled = false;
+
+    const audio = new Audio(bootSound);
+    audio.volume = 0.12;
+    audioRef.current = audio;
+    audio.play().catch(() => {});
 
     async function run() {
       setStatusLines([]);
@@ -114,6 +146,7 @@ export default function Boot({ onComplete }) {
       await sleep(200);
       if (!cancelled) {
         setHidden(true);
+        fadeOut(audioRef.current, 600);
         await sleep(600);
         if (onComplete && !doneRef.current) {
           doneRef.current = true;
@@ -123,20 +156,84 @@ export default function Boot({ onComplete }) {
     }
 
     run();
-    return () => { cancelled = true; };
-  }, []);
+    return () => {
+      cancelled = true;
+      stopAudio();
+    };
+  }, [started]);
+
+  useEffect(() => {
+    if (started) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Enter') startBoot();
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [started]);
 
   return (
     <div id="boot" className={hidden ? 'hidden' : ''}>
       <div id="boot-terminal">
         <pre className="ascii-art">{ascii}</pre>
-        <div className="boot-status">
-          {statusLines.map((line, i) => (
-            <div key={i}>{line.text}</div>
-          ))}
-        </div>
-        {showCursor && <span className="boot-cursor">_</span>}
+        {!started ? (
+          <div className="enter-area" style={{ marginTop: 16 }}>
+            <span style={{ color: '#fff', fontFamily: "'Share Tech Mono', monospace", fontSize: 16 }}>
+              &gt;
+            </span>{' '}
+            <button
+              ref={btnRef}
+              autoFocus
+              onClick={startBoot}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#aaa',
+                fontFamily: "'Share Tech Mono', monospace",
+                fontSize: 16,
+                cursor: 'pointer',
+                padding: 0,
+                display: 'inline',
+                outline: 'none',
+              }}
+              onMouseEnter={e => { e.target.style.color = '#fff'; }}
+              onMouseLeave={e => { e.target.style.color = '#aaa'; }}
+            >
+              PRESS ENTER
+            </button>
+            <span className="boot-cursor">_</span>
+          </div>
+        ) : (
+          <>
+            <div className="boot-status">
+              {statusLines.map((line, i) => (
+                <div key={i}>{line.text}</div>
+              ))}
+            </div>
+            {showCursor && <span className="boot-cursor">_</span>}
+          </>
+        )}
       </div>
+      <button
+        onClick={skipBoot}
+        style={{
+          position: 'fixed',
+          bottom: 12,
+          right: 12,
+          zIndex: 10001,
+          background: '#111',
+          color: '#666',
+          border: '1px solid #333',
+          padding: '4px 12px',
+          fontFamily: "'Share Tech Mono', monospace",
+          fontSize: 12,
+          cursor: 'pointer',
+          opacity: 0.5,
+        }}
+        onMouseEnter={e => { e.target.style.opacity = 1; e.target.style.color = '#aaa'; }}
+        onMouseLeave={e => { e.target.style.opacity = 0.5; e.target.style.color = '#666'; }}
+      >
+        SKIP &gt;&gt;
+      </button>
     </div>
   );
 }

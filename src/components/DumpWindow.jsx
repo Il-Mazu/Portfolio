@@ -6,7 +6,7 @@ const imageList = Object.values(imageModules).map(m => m.default || m);
 export default function DumpWindow({
   id, x, y, width, height,
   visible, focused, zIndex,
-  onFocus, onClose, onMove, onResize,
+  powerOn, onFocus, onClose, onMove, onResize,
 }) {
   const [currentIndex, setCurrentIndex] = useState(null);
   const winRef = useRef(null);
@@ -101,7 +101,7 @@ export default function DumpWindow({
     <div
       ref={winRef}
       id={id}
-      className={`window ${focused ? 'focused' : ''}`}
+      className={`window ${focused ? 'focused' : ''}${powerOn ? ' crt-power-on' : ''}`}
       style={{ left: x, top: y, width, height: height || undefined, zIndex }}
       onMouseDown={handleMouseDown}
     >
@@ -117,6 +117,7 @@ export default function DumpWindow({
           src={imageList[currentIndex]}
           alt={`dump ${currentIndex + 1}`}
           className="gallery-img"
+          draggable={false}
         />
       </div>
       <div className="gallery-nav">

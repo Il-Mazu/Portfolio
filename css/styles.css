@@ -13,16 +13,16 @@
   --win-border-light: #444444;
   --win-bg:           #030303;
   --text-primary:     #aaaaaa;
-  --text-dim:         #333333;
+  --text-dim:         #666666;
   --text-bright:      #eeeeee;
-  --accent:           #ffffff;
+  --accent:           #e0e0e0;
   --accent2:          #777777;
   --scanline:         rgba(255,255,255,0.025);
   --green:            #33ff55;
   --red:              #ff3333;
   --amber:            #ffaa00;
   --taskbar:          #0d0d0d;
-  --cursor-color:     #ffffff;
+  --cursor-color:     #e0e0e0;
 }
 
 html, body {
@@ -33,7 +33,7 @@ html, body {
   color: var(--text-primary);
   font-family: 'Share Tech Mono', monospace;
   font-size: 13px;
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect x='6' y='0' width='4' height='16' fill='%23ffffff'/%3E%3Crect x='0' y='6' width='16' height='4' fill='%23ffffff'/%3E%3C/svg%3E") 8 8, crosshair;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16'%3E%3Crect x='6' y='0' width='4' height='16' fill='%23e0e0e0'/%3E%3Crect x='0' y='6' width='16' height='4' fill='%23e0e0e0'/%3E%3C/svg%3E") 8 8, crosshair;
 }
 
 /* ── NOISE TEXTURE ───────────────────────── */
@@ -162,11 +162,11 @@ html, body {
 .titlebar-icon {
   width: 10px;
   height: 10px;
-  background: #444;
+  background: #666;
   clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
   flex-shrink: 0;
 }
-.window.focused .titlebar-icon { background: #fff; }
+.window.focused .titlebar-icon { background: var(--accent); }
 .titlebar-title {
   flex: 1;
   overflow: hidden;
@@ -183,7 +183,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #555;
+  color: #666;
   cursor: pointer;
   font-family: 'Share Tech Mono', monospace;
   line-height: 1;
@@ -193,7 +193,6 @@ html, body {
 .win-btn:hover { background: #3a3a3a; color: #fff; }
 .win-btn.close:hover { background: var(--red); color: #000; border-color: var(--red); }
 .win-btn.minimize:hover { background: var(--amber); color: #000; border-color: var(--amber); }
-.win-btn.maximize:hover { background: var(--green); color: #000; border-color: var(--green); }
 
 /* ── MENUBAR ─────────────────────────────── */
 .win-menubar {
@@ -278,7 +277,7 @@ html, body {
   animation: glitch-anim 4s infinite;
 }
 .glitch::before {
-  color: #fff;
+  color: var(--accent);
   clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%);
   animation-delay: 0s;
   opacity: 0.5;
@@ -310,7 +309,7 @@ html, body {
   animation: glitch-heavy 3s infinite;
 }
 .glitch-heavy::before {
-  color: #fff;
+  color: var(--accent);
   clip-path: polygon(0 0, 100% 0, 100% 35%, 0 35%);
   animation-delay: 0s;
   opacity: 0.6;
