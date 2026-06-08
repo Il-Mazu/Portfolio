@@ -14,14 +14,14 @@ import Taskbar from './components/Taskbar';
 import StartMenu from './components/StartMenu';
 import Notification from './components/Notification';
 
-const INITIAL_WINDOWS = {
-  'win-about': { visible: true, focused: true,  zIndex: 10, x: 40,  y: 28,  w: 380, h: null },
-  'win-blog':  { visible: false, focused: false, zIndex: 1,  x: 440, y: 28,  w: 330, h: null },
-  'win-music': { visible: false, focused: false, zIndex: 1,  x: 440, y: 300, w: 330, h: null },
-  'win-dump':  { visible: false, focused: false, zIndex: 1,  x: 40,  y: 340, w: 260, h: null },
-  'win-links': { visible: false, focused: false, zIndex: 1,  x: 320, y: 340, w: 240, h: null },
-  'win-term':  { visible: false, focused: false, zIndex: 1,  x: 780, y: 28,  w: 240, h: null },
-};
+  const INITIAL_WINDOWS = {
+    'win-about': { visible: true, focused: true,  zIndex: 10, x: 40,  y: 28,  w: 380, h: null },
+    'win-blog':  { visible: false, focused: false, zIndex: 1,  x: 440, y: 28,  w: 330, h: null },
+    'win-music': { visible: false, focused: false, zIndex: 1,  x: 440, y: 300, w: 330, h: null },
+    'win-dump':  { visible: false, focused: false, zIndex: 1,  x: 640, y: 420, w: 700, h: 520 },
+    'win-links': { visible: false, focused: false, zIndex: 1,  x: 320, y: 340, w: 240, h: null },
+    'win-term':  { visible: false, focused: false, zIndex: 1,  x: 780, y: 28,  w: 240, h: null },
+  };
 
 const TRACKS = [
   { title: 'burial — archangel',       time: '04:18', progress: 52 },
@@ -61,16 +61,54 @@ export default function App() {
     });
   }, []);
 
-  const openWindow = useCallback((id) => {
+  const openWindow = useCallback((id, pos) => {
     setWindows(prev => {
       const cur = prev[id];
       if (!cur) return prev;
+
+      const visible = Object.keys(prev)
+        .filter(k => prev[k].visible && k !== id)
+        .map(k => ({
+          x: prev[k].x, y: prev[k].y,
+          w: prev[k].w || 300, h: prev[k].h || 200,
+        }));
+
+      const winW = cur.w || 300;
+      const winH = cur.h || 200;
+
+      const overlaps = (x, y) =>
+        visible.some(r =>
+          x + winW > r.x && x < r.x + r.w &&
+          y + winH > r.y && y < r.y + r.h
+        );
+
+      let nx = pos ? pos.x : cur.x, ny = pos ? pos.y : cur.y;
+
+      if (overlaps(nx, ny)) {
+        nx = cur.x + 30;
+        ny = cur.y + 30;
+        if (overlaps(nx, ny)) {
+          const maxX = window.innerWidth - 180;
+          const maxY = window.innerHeight - 32 - 100;
+          let found = false;
+          for (let gy = 0; gy <= maxY && !found; gy += 40) {
+            for (let gx = 0; gx <= maxX && !found; gx += 40) {
+              if (!overlaps(gx, gy)) {
+                nx = gx; ny = gy;
+                found = true;
+              }
+            }
+          }
+          if (!found) { nx = cur.x; ny = cur.y; }
+        }
+      }
+
       zCounter++;
       const next = {};
       for (const key of Object.keys(prev)) {
         next[key] = { ...prev[key], focused: key === id };
       }
-      next[id] = { ...cur, visible: true, focused: true, zIndex: zCounter };
+      next[id] = { ...cur, visible: true, focused: true, zIndex: zCounter, x: nx, y: ny };
       return next;
     });
     setStartMenuOpen(false);
@@ -166,6 +204,16 @@ export default function App() {
     return () => clearTimeout(t);
   }, []);
 
+  // Open dump window at bottom-right after boot sequence completes
+  useEffect(() => {
+    if (bootDone) {
+      const w = 700, h = 520;
+      const x = Math.max(0, window.innerWidth - w - 20);
+      const y = Math.max(0, window.innerHeight - 32 - h - 20);
+      openWindow('win-dump', { x, y });
+    }
+  }, [bootDone]);
+
   // ── Window menubar configurations ──
   const menuFor = (id) => {
     const menus = {
@@ -209,9 +257,6 @@ export default function App() {
         { text: 'PLAYING', className: 'status-seg c-green' },
         { text: '4 tracks', className: 'status-seg' },
         { text: 'vol: 80%' },
-      ],
-      'win-dump': [
-        { text: '3 categories' },
       ],
       'win-links': [
         { text: '7 links' },
@@ -304,8 +349,8 @@ export default function App() {
           />
         </Window>
 
-        <Window
-          id="win-dump" title="dump/ — BIN"
+        <DumpWindow
+          id="win-dump"
           x={w['win-dump'].x} y={w['win-dump'].y}
           width={w['win-dump'].w} height={w['win-dump'].h}
           visible={w['win-dump'].visible}
@@ -313,13 +358,9 @@ export default function App() {
           zIndex={w['win-dump'].zIndex}
           onFocus={focusWindow}
           onClose={closeWindow}
-          onMinimize={minimizeWindow}
           onMove={moveWindow}
           onResize={resizeWindow}
-          statusbar={statusFor('win-dump')}
-        >
-          <DumpWindow />
-        </Window>
+        />
 
         <Window
           id="win-links" title="links.ini — NET"
