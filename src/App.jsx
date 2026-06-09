@@ -20,9 +20,9 @@ import { fadeIn, fadeOut } from './utils/audio';
 const AMBIENT_VOL = 0.06;
 
   const INITIAL_WINDOWS = {
-    'win-about': { open: false, visible: false, focused: false, zIndex: 1,  x: 20,  y: 0,   w: 380, h: null },
+    'win-about': { open: false, visible: false, focused: false, zIndex: 1,  x: 80,  y: 0,   w: 380, h: null },
     'win-blog':  { open: false, visible: false, focused: false, zIndex: 1,  x: 440, y: 28,  w: 330, h: null },
-    'win-music': { open: false, visible: false, focused: false, zIndex: 1,  x: 440, y: 300, w: 330, h: null },
+    'win-music': { open: false, visible: false, focused: false, zIndex: 1,  x: 440, y: 300, w: 480, h: null },
     'win-dump':  { open: false, visible: false, focused: false, zIndex: 1,  x: 620, y: 390, w: 480, h: 360 },
     'win-links': { open: false, visible: false, focused: false, zIndex: 1,  x: 320, y: 340, w: 240, h: null },
     'win-term':  { open: false, visible: false, focused: false, zIndex: 1,  x: 780, y: 28,  w: 240, h: null },
@@ -50,8 +50,12 @@ export default function App() {
   const getResponsiveSizes = useCallback(() => ({
     aboutW: Math.min(420, Math.round(window.innerWidth * 0.32)),
     aboutH: window.innerHeight - 32,
-    dumpW: Math.min(400, Math.round(window.innerWidth * 0.22)),
-    dumpH: Math.min(300, Math.round(window.innerHeight * 0.24)),
+    dumpW: Math.min(480, Math.round(window.innerWidth * 0.264)),
+    dumpH: Math.min(360, Math.round(window.innerHeight * 0.288)),
+    termX: Math.round(window.innerWidth * 0.28),
+    termY: Math.round(window.innerHeight * 0.02),
+    termW: Math.round(window.innerWidth * 0.32),
+    termH: Math.round(window.innerHeight * 0.3),
   }), []);
 
   const showNotif = useCallback((msg) => {
@@ -213,10 +217,10 @@ export default function App() {
   // Open about and dump windows with CRT power-on after boot sequence completes
   useEffect(() => {
     if (bootDone) {
-      const { dumpW, dumpH } = getResponsiveSizes();
-      const bigW = Math.min(500, Math.round(dumpW * 1.25));
-      const bigH = Math.min(375, Math.round(dumpH * 1.25));
-      const dx = Math.max(0, window.innerWidth - bigW - 20);
+      const { dumpW, dumpH, termX, termY, termW, termH } = getResponsiveSizes();
+      const bigW = Math.min(600, Math.round(dumpW * 1.25));
+      const bigH = Math.min(450, Math.round(dumpH * 1.25));
+      const dx = Math.max(0, window.innerWidth - bigW - 20 - Math.round(window.innerWidth * 0.045));
       const dy = Math.max(0, window.innerHeight - 32 - bigH - 20);
       const aboutZ = ++zCounter;
       const dumpZ = ++zCounter;
@@ -232,6 +236,16 @@ export default function App() {
         next['win-dump'] = {
           ...prev['win-dump'], open: true, visible: true, focused: true,
           zIndex: dumpZ, x: dx, y: dy, w: bigW, h: bigH,
+        };
+        const musicW = 480;
+        const musicX = Math.max(0, window.innerWidth - musicW - 16 - 80 - 16 - Math.round(window.innerWidth * 0.045));
+        next['win-music'] = {
+          ...prev['win-music'], open: true, visible: true, focused: false,
+          zIndex: ++zCounter, x: musicX, y: 16,
+        };
+        next['win-term'] = {
+          ...prev['win-term'], open: true, visible: true, focused: false,
+          zIndex: ++zCounter, x: termX, y: termY, w: termW, h: termH,
         };
         return next;
       });
@@ -288,17 +302,22 @@ export default function App() {
         ...prev,
         'win-about': {
           ...prev['win-about'],
-          x: 20,
+          x: 80,
           y: 0,
           w: aboutW,
           h: aboutH,
         },
         'win-dump': {
           ...prev['win-dump'],
-          w: dumpW,
-          h: dumpH,
-          x: Math.min(prev['win-dump'].x, window.innerWidth - dumpW - 20),
-          y: Math.min(prev['win-dump'].y, window.innerHeight - 32 - dumpH - 20),
+          x: Math.min(prev['win-dump'].x, Math.max(0, window.innerWidth - (prev['win-dump'].w || dumpW) - 20 - Math.round(window.innerWidth * 0.045))),
+          y: Math.min(prev['win-dump'].y, Math.max(0, window.innerHeight - 32 - (prev['win-dump'].h || dumpH) - 20)),
+        },
+        'win-term': {
+          ...prev['win-term'],
+          x: Math.round(window.innerWidth * 0.28),
+          y: Math.round(window.innerHeight * 0.02),
+          w: Math.round(window.innerWidth * 0.32),
+          h: Math.round(window.innerHeight * 0.3),
         },
       }));
     };
@@ -321,11 +340,7 @@ export default function App() {
         { label: 'Archive',   onClick: () => showNotif() },
         { label: 'Tags',      onClick: () => showNotif() },
       ],
-      'win-music': [
-        { label: 'File',     onClick: () => showNotif() },
-        { label: 'Playlist', onClick: () => showNotif() },
-        { label: 'Vis',      onClick: () => showNotif() },
-      ],
+      'win-music': null,
       'win-links': [
         { label: 'Add',  onClick: () => showNotif() },
         { label: 'Sort', onClick: () => showNotif() },
@@ -348,7 +363,7 @@ export default function App() {
         { text: 'latest: 2025.06.07' },
       ],
       'win-music': [
-        { text: 'PLAYING', className: 'status-seg c-green' },
+        { text: 'PLAYING', className: 'status-seg c-red' },
         { text: '4 tracks', className: 'status-seg' },
         { text: 'vol: 80%' },
       ],
@@ -417,21 +432,22 @@ export default function App() {
           <BlogWindow onNotif={showNotif} />
         </Window>
 
-        <Window
-          id="win-music" title="player.exe — MEDIA"
-          x={w['win-music'].x} y={w['win-music'].y}
-          width={w['win-music'].w} height={w['win-music'].h}
-          visible={w['win-music'].visible}
-          focused={w['win-music'].focused}
-          zIndex={w['win-music'].zIndex}
-          onFocus={focusWindow}
-          onClose={closeWindow}
-          onMinimize={minimizeWindow}
-          onMove={moveWindow}
-          onResize={resizeWindow}
-          menubar={menuFor('win-music')}
-          statusbar={statusFor('win-music')}
-        >
+          <Window
+            id="win-music" title="player.exe — MEDIA"
+            x={w['win-music'].x} y={w['win-music'].y}
+            width={w['win-music'].w} height={w['win-music'].h}
+            visible={w['win-music'].visible}
+            focused={w['win-music'].focused}
+            zIndex={w['win-music'].zIndex}
+            powerOn={!initialAnimDone}
+            onFocus={focusWindow}
+            onClose={closeWindow}
+            onMinimize={minimizeWindow}
+            onMove={moveWindow}
+            onResize={resizeWindow}
+            menubar={menuFor('win-music')}
+            statusbar={statusFor('win-music')}
+          >
           <MusicWindow
             tracks={TRACKS}
             currentTrack={currentTrack}
@@ -483,6 +499,7 @@ export default function App() {
           visible={w['win-term'].visible}
           focused={w['win-term'].focused}
           zIndex={w['win-term'].zIndex}
+          powerOn={!initialAnimDone}
           onFocus={focusWindow}
           onClose={closeWindow}
           onMinimize={minimizeWindow}
@@ -490,6 +507,8 @@ export default function App() {
           onResize={resizeWindow}
         >
           <TerminalWindow
+            startupCmd="cmatrix"
+            onOpen={openWindow}
             onGlitch={() => {
               const el = document.querySelector('.window.focused');
               if (el) {

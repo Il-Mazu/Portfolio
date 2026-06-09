@@ -2,45 +2,47 @@ export default function MusicWindow({
   tracks, currentTrack, playing,
   onPrev, onNext, onTogglePlay, onSelectTrack, onNotif,
 }) {
+  const current = tracks[currentTrack];
+  const next = tracks[(currentTrack + 1) % tracks.length];
+
   return (
-    <>
-      <span className="c-dim">now playing ─────────────────</span><br />
-      <span className="c-green">▶ </span>
-      <span className="c-accent">{tracks[currentTrack].title}</span><br />
-      <span className="c-dim">  00:00 / {tracks[currentTrack].time}</span><br />
-      <div className="progress">
-        <div className="progress-fill" style={{ width: `${tracks[currentTrack].progress}%` }} />
+    <div className="music-player">
+      <div className="album-cover">
+        <span className="album-label">{current.title}</span>
       </div>
-      <span className="c-dim">
-        <span style={{ cursor: 'pointer' }} onClick={onPrev}>|◄◄</span>
-        &nbsp;
-        <span style={{ cursor: 'pointer' }} onClick={onTogglePlay}>
-          {playing ? '▶▶|' : '►'}
-        </span>
-        &nbsp;
-        <span style={{ cursor: 'pointer' }} onClick={() => onNotif('// stop')}>■</span>
-        &nbsp;
-        <span style={{ cursor: 'pointer' }} onClick={() => onNotif('// shuffle on')}>⇄</span>
-        &nbsp;
-        <span style={{ cursor: 'pointer' }} onClick={() => onNotif('// repeat on')}>↻</span>
-      </span><br /><br />
-      <div className="hr" />
-      <span className="c-dim">── queue ───────────────────</span><br />
-      {tracks.map((t, i) => {
-        const isNow = i === currentTrack;
-        return (
-          <div
-            key={i}
-            className="pl-item"
-            onClick={() => onSelectTrack(i)}
+
+      <div className="player-main">
+        <div className="now-playing">
+          <span className="c-red">▶ </span>
+          <span className="c-accent">{current.title}</span>
+        </div>
+        <div className="time-display c-dim">00:00 / {current.time}</div>
+
+        <div className="progress">
+          <div className="progress-fill" style={{ width: `${current.progress}%` }} />
+        </div>
+
+        <div className="controls c-dim">
+          <span style={{ cursor: 'pointer' }} onClick={onPrev}>|◄◄</span>
+          <span style={{ cursor: 'pointer' }} onClick={onTogglePlay}>
+            {playing ? '▶▶|' : '►'}
+          </span>
+          <span style={{ cursor: 'pointer' }} onClick={() => onNotif('// stop')}>■</span>
+          <span style={{ cursor: 'pointer' }} onClick={() => onNotif('// shuffle on')}>⇄</span>
+          <span style={{ cursor: 'pointer' }} onClick={() => onNotif('// repeat on')}>↻</span>
+        </div>
+
+        <div className="next-up">
+          <span className="c-dim">next up: </span>
+          <span
+            className="c-red"
+            style={{ cursor: 'pointer' }}
+            onClick={() => onSelectTrack((currentTrack + 1) % tracks.length)}
           >
-            <span className={`pl-num ${isNow ? 'pl-now' : 'c-dim'}`}>
-              {isNow ? '▶' : String(i + 1).padStart(2, '0')}
-            </span>
-            <span className={isNow ? 'c-accent' : ''}>{t.title}</span>
-          </div>
-        );
-      })}
-    </>
+            {next.title}
+          </span>
+        </div>
+      </div>
+    </div>
   );
 }

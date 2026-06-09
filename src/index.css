@@ -254,6 +254,14 @@ html, body, #root {
 .c-bright  { color: var(--text-bright); }
 .c-accent2 { color: var(--accent2); }
 
+/* ── MATRIX RAIN ──────────────────────────── */
+.matrix-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+
 /* ── BLINK CURSOR ────────────────────────── */
 .cursor {
   display: inline-block;
@@ -434,10 +442,72 @@ html, body, #root {
 }
 .pl-item:hover { color: var(--text-bright); }
 .pl-num { color: var(--text-dim); min-width: 24px; font-size: 14px; }
-.pl-now { color: var(--green); }
+.pl-now { color: var(--red); }
 
 /* ── HR ──────────────────────────────────── */
 .hr { border: none; border-top: 1px solid #1a1a1a; margin: 8px 0; }
+
+/* ── MUSIC PLAYER ───────────────────────── */
+.music-player {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+}
+.album-cover {
+  width: 160px;
+  height: 160px;
+  flex-shrink: 0;
+  background: #0a0a0a;
+  border: 1px solid #2a2a2a;
+  box-shadow:
+    0 0 20px rgba(0,0,0,0.6),
+    inset 0 0 30px rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  text-align: center;
+  overflow: hidden;
+}
+.album-label {
+  font-size: 11px;
+  line-height: 1.3;
+  color: var(--red);
+  word-break: break-word;
+}
+.player-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.now-playing {
+  font-size: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.time-display {
+  font-size: 15px;
+}
+.controls {
+  display: flex;
+  gap: 10px;
+  font-size: 18px;
+}
+.controls span {
+  transition: color 0.15s;
+}
+.controls span:hover {
+  color: var(--red);
+}
+.next-up {
+  font-size: 14px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* ── LINKS ───────────────────────────────── */
 .link-item {
