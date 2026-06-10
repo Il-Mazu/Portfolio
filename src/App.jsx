@@ -75,8 +75,16 @@ export default function App() {
   const [currentTrack, setCurrentTrack] = useState(0);
   const [playing, setPlaying] = useState(false);
   const notifTimer = useRef(null);
+  const ambientRef = useRef(null);
   const [initialAnimDone, setInitialAnimDone] = useState(false);
   const audioRef = useRef(null);
+  const [crtEnabled, setCrtEnabled] = useState(true);
+  const [noiseEnabled, setNoiseEnabled] = useState(true);
+  const [ambientEnabled, setAmbientEnabled] = useState(true);
+  const [glitchEnabled, setGlitchEnabled] = useState(true);
+  const [lightMode, setLightMode] = useState(false);
+  const [allMinimized, setAllMinimized] = useState(false);
+  const savedVisible = useRef(null);
   const [progress, setProgress] = useState(0);
   const [currentAudioTime, setCurrentAudioTime] = useState('00:00');
   const [volume, setVolume] = useState(0.8);
@@ -221,6 +229,39 @@ export default function App() {
     setPlaying(true);
   }, []);
 
+  // ── Toggles ──
+  const toggleCrt = useCallback(() => setCrtEnabled(prev => !prev), []);
+  const toggleNoise = useCallback(() => setNoiseEnabled(prev => !prev), []);
+  const toggleAmbient = useCallback(() => setAmbientEnabled(prev => !prev), []);
+  const toggleGlitch = useCallback(() => setGlitchEnabled(prev => !prev), []);
+  const toggleLightMode = useCallback(() => setLightMode(prev => !prev), []);
+
+  // ── Desktop toggle (minimize/restore all) ──
+  const toggleDesktop = useCallback(() => {
+    setAllMinimized(prev => !prev);
+  }, []);
+
+  useEffect(() => {
+    setWindows(prev => {
+      const next = {};
+      for (const key of Object.keys(prev)) {
+        next[key] = { ...prev[key] };
+      }
+      if (allMinimized) {
+        savedVisible.current = {};
+        for (const key of Object.keys(prev)) {
+          savedVisible.current[key] = prev[key].visible;
+          next[key].visible = false;
+        }
+      } else {
+        for (const key of Object.keys(prev)) {
+          next[key].visible = savedVisible.current?.[key] || false;
+        }
+      }
+      return next;
+    });
+  }, [allMinimized]);
+
   // ── Start menu ──
   const toggleStartMenu = useCallback(() => {
     setStartMenuOpen(prev => !prev);
@@ -249,6 +290,7 @@ export default function App() {
 
   // ── Glitch engine ──
   useEffect(() => {
+    if (!glitchEnabled) return;
     const interval = setInterval(() => {
       if (Math.random() < 0.15) {
         const el = document.querySelector('.window.focused');
@@ -268,7 +310,7 @@ export default function App() {
       }
     }, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, [glitchEnabled]);
 
   // Open windows with CRT power-on after boot sequence completes
   useEffect(() => {
@@ -307,6 +349,7 @@ export default function App() {
     const mac = new Audio(macSound);
     const ambient = new Audio(ambientSound);
     ambient.loop = true;
+    ambientRef.current = ambient;
 
     fadeIn(mac, 0.12, 500);
 
@@ -337,8 +380,24 @@ export default function App() {
       mac.currentTime = 0;
       ambient.pause();
       ambient.currentTime = 0;
+      ambientRef.current = null;
     };
   }, [bootDone]);
+
+  // ── Theme ──
+  useEffect(() => {
+    document.documentElement.style.filter = lightMode ? 'invert(1)' : '';
+  }, [lightMode]);
+
+  // ── Ambient audio toggle ──
+  useEffect(() => {
+    if (!ambientRef.current) return;
+    if (ambientEnabled) {
+      ambientRef.current.play().catch(() => {});
+    } else {
+      ambientRef.current.pause();
+    }
+  }, [ambientEnabled]);
 
   // ── Music track audio ──
   useEffect(() => {
@@ -471,8 +530,8 @@ export default function App() {
   return (
     <>
       {!bootDone && <Boot onComplete={() => setBootDone(true)} />}
-      <CrtOverlay />
-      <NoiseOverlay />
+      {crtEnabled && <CrtOverlay />}
+      {noiseEnabled && <NoiseOverlay />}
 
       <div id="mobile-block">
         <div className="mb-icon">⊞</div>
@@ -663,13 +722,21 @@ export default function App() {
       </div>
 
       <StartMenu open={startMenuOpen} onOpen={openWindow} onNotif={showNotif} />
-      <Taskbar
+      {bootDone && <Taskbar
         windows={windows}
         focusedId={focusedId}
         onOpenWindow={openWindow}
         onMinimizeWindow={minimizeWindow}
         onToggleStartMenu={toggleStartMenu}
-      />
+        settings={{ crt: crtEnabled, noise: noiseEnabled, ambient: ambientEnabled, glitch: glitchEnabled, lightMode }}
+        onToggleCrt={toggleCrt}
+        onToggleNoise={toggleNoise}
+        onToggleAmbient={toggleAmbient}
+        onToggleGlitch={toggleGlitch}
+        onToggleLightMode={toggleLightMode}
+        onToggleDesktop={toggleDesktop}
+        allMinimized={allMinimized}
+      />}
     </>
   );
 }
