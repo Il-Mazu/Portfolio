@@ -3,7 +3,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 export default function OscilloscopeWindow({
   id, x, y, width, height,
   visible, focused, zIndex,
-  powerOn, onFocus, onClose, onMove, onResize,
+  onFocus, onClose, onMinimize, onMove, onResize,
   audioElement, trackKey,
 }) {
   const winRef = useRef(null);
@@ -303,7 +303,7 @@ export default function OscilloscopeWindow({
     <div
       ref={winRef}
       id={id}
-      className={`window ${focused ? 'focused' : ''}${powerOn ? ' crt-power-on' : ''}`}
+      className={`window ${focused ? 'focused' : ''}`}
       style={{ left: x, top: y, width, height: height || undefined, zIndex }}
       onMouseDown={handleMouseDown}
     >
@@ -311,12 +311,18 @@ export default function OscilloscopeWindow({
         <div className="titlebar-icon" />
         <span className="scope-title">◆ scope.exe</span>
         <div className="win-buttons">
+          <div className="win-btn minimize" onClick={() => onMinimize(id)}>_</div>
           <div className="win-btn close" onClick={() => onClose(id)}>×</div>
         </div>
       </div>
       <div className="scope-content">
         <canvas ref={canvasRef} className="scope-canvas" />
         <div className="scope-scanlines" />
+        {!audioActive && (
+          <div className="scope-idle-overlay">
+            <span>player needs to be running</span>
+          </div>
+        )}
       </div>
       <div className="scope-statusbar">
         <span className={audioActive ? 'scope-live' : 'scope-idle'}>

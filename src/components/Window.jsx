@@ -8,7 +8,7 @@ export default function Window({
   onFocus, onClose, onMinimize,
   onMove, onResize,
   menubar, statusbar, style: extraStyle,
-  powerOn, children,
+  children,
 }) {
   const winRef = useRef(null);
   const dragRef = useRef(null);
@@ -96,7 +96,7 @@ export default function Window({
     <div
       ref={winRef}
       id={id}
-      className={`window ${focused ? 'focused' : ''}${powerOn ? ' crt-power-on' : ''}`}
+      className={`window ${focused ? 'focused' : ''}`}
       style={{ left: x, top: y, width, height: height || undefined, zIndex, ...extraStyle }}
       onMouseDown={handleMouseDown}
     >

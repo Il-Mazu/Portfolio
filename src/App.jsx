@@ -33,26 +33,23 @@ import cover4 from '../assets/covers/00 - Sewerslvt - Mr. Kill Myself.jpg';
 const TASKBAR_H = 40;
 const AMBIENT_VOL = 0.06;
 
-function calcLayout(vw, vh) {
-  const avh = vh - TASKBAR_H;
-  return {
-    'win-about': { x: 0,                       y: 0,                       w: Math.round(vw * 0.25), h: avh },
-    'win-term':  { x: Math.round(vw * 0.26),   y: Math.round(avh * 0.02),  w: Math.round(vw * 0.30), h: Math.round(avh * 0.32) },
-    'win-music': { x: Math.round(vw * 0.62),   y: Math.round(avh * 0.02),  w: Math.round(vw * 0.28), h: Math.round(avh * 0.26) },
-    'win-home':  { x: Math.round(vw * 0.65),   y: Math.round(avh * 0.34),  w: Math.round(vw * 0.28), h: Math.round(avh * 0.27) },
-    'win-scope': { x: Math.round(vw * 0.30),   y: Math.round(avh * 0.78),  w: Math.round(vw * 0.28), h: Math.round(avh * 0.16) },
-    'win-dump':  { x: Math.round(vw * 0.62),   y: Math.round(avh * 0.64),  w: Math.round(vw * 0.36), h: Math.round(avh * 0.35) },
-    'win-blog':  { x: Math.round(vw * 0.56),   y: Math.round(avh * 0.32),  w: Math.round(vw * 0.26), h: Math.round(avh * 0.26) },
-  };
-}
-
 const WIN_IDS = ['win-home', 'win-about', 'win-blog', 'win-music', 'win-dump', 'win-term', 'win-scope'];
 
+const DEFAULT_SIZES = {
+  'win-home':  { w: 500, h: 350 },
+  'win-about': { w: 420, h: 500 },
+  'win-blog':  { w: 600, h: 420 },
+  'win-music': { w: 420, h: 320 },
+  'win-dump':  { w: 500, h: 400 },
+  'win-term':  { w: 640, h: 350 },
+  'win-scope': { w: 420, h: 300 },
+};
+
 function buildInitialWindows() {
-  const l = calcLayout(window.innerWidth, window.innerHeight);
   const result = {};
   for (const id of WIN_IDS) {
-    result[id] = { open: false, visible: false, focused: false, zIndex: 1, x: l[id].x, y: l[id].y, w: l[id].w, h: l[id].h };
+    const sz = DEFAULT_SIZES[id] || { w: 300, h: 200 };
+    result[id] = { open: false, visible: false, focused: false, zIndex: 1, x: 0, y: 0, w: sz.w, h: sz.h };
   }
   return result;
 }
@@ -76,7 +73,7 @@ export default function App() {
   const [playing, setPlaying] = useState(false);
   const notifTimer = useRef(null);
   const ambientRef = useRef(null);
-  const [initialAnimDone, setInitialAnimDone] = useState(false);
+  const [desktopReveal, setDesktopReveal] = useState(false);
   const audioRef = useRef(null);
   const [crtEnabled, setCrtEnabled] = useState(true);
   const [noiseEnabled, setNoiseEnabled] = useState(true);
@@ -115,41 +112,14 @@ export default function App() {
       const cur = prev[id];
       if (!cur) return prev;
 
-      const visible = Object.keys(prev)
-        .filter(k => prev[k].visible && k !== id)
-        .map(k => ({
-          x: prev[k].x, y: prev[k].y,
-          w: prev[k].w || 300, h: prev[k].h || 200,
-        }));
-
       const winW = cur.w || 300;
       const winH = cur.h || 200;
 
-      const overlaps = (x, y) =>
-        visible.some(r =>
-          x + winW > r.x && x < r.x + r.w &&
-          y + winH > r.y && y < r.y + r.h
-        );
-
       let nx = pos ? pos.x : cur.x, ny = pos ? pos.y : cur.y;
 
-      if (overlaps(nx, ny)) {
-        nx = cur.x + 30;
-        ny = cur.y + 30;
-        if (overlaps(nx, ny)) {
-          const maxX = window.innerWidth - 180;
-          const maxY = window.innerHeight - TASKBAR_H - 100;
-          let found = false;
-          for (let gy = 0; gy <= maxY && !found; gy += 40) {
-            for (let gx = 0; gx <= maxX && !found; gx += 40) {
-              if (!overlaps(gx, gy)) {
-                nx = gx; ny = gy;
-                found = true;
-              }
-            }
-          }
-          if (!found) { nx = cur.x; ny = cur.y; }
-        }
+      if (!cur.open) {
+        nx = Math.round((window.innerWidth - winW) / 2);
+        ny = Math.round((window.innerHeight - TASKBAR_H - winH) / 2);
       }
 
       zCounter++;
@@ -312,33 +282,28 @@ export default function App() {
     return () => clearInterval(interval);
   }, [glitchEnabled]);
 
-  // Open windows with CRT power-on after boot sequence completes
+  // Open only AboutWindow after boot, then trigger desktop reveal
   useEffect(() => {
     if (bootDone) {
-      const l = calcLayout(window.innerWidth, window.innerHeight);
-      const homeZ = ++zCounter;
-      const aboutZ = ++zCounter;
-      const blogZ = ++zCounter;
-      const musicZ = ++zCounter;
-      const dumpZ = ++zCounter;
-      const termZ = ++zCounter;
-      const scopeZ = ++zCounter;
+      const vw = window.innerWidth;
+      const vh = window.innerHeight - TASKBAR_H;
       setWindows(prev => {
         const next = {};
         for (const key of Object.keys(prev)) {
           next[key] = { ...prev[key], focused: false };
         }
-        next['win-about'] = { ...prev['win-about'], ...l['win-about'], open: true, visible: true, focused: false, zIndex: aboutZ };
-        next['win-dump']  = { ...prev['win-dump'],  ...l['win-dump'],  open: true, visible: true, focused: false, zIndex: dumpZ };
-        next['win-music'] = { ...prev['win-music'], ...l['win-music'], open: true, visible: true, focused: false, zIndex: musicZ };
-        next['win-term']  = { ...prev['win-term'],  ...l['win-term'],  open: true, visible: true, focused: false, zIndex: termZ };
-        next['win-scope'] = { ...prev['win-scope'], ...l['win-scope'], open: true, visible: true, focused: false, zIndex: scopeZ };
-        next['win-home']  = { ...prev['win-home'],  ...l['win-home'],  open: true, visible: true, focused: true,  zIndex: homeZ };
-        next['win-blog']  = { ...prev['win-blog'],  ...l['win-blog'],  open: false, visible: false, focused: false, zIndex: blogZ };
+        next['win-about'] = {
+          ...prev['win-about'],
+          x: Math.round(vw * 0.02),
+          y: 0,
+          w: Math.round(vw * 0.25),
+          h: vh,
+          open: true, visible: true, focused: true, zIndex: ++zCounter,
+        };
         return next;
       });
       setStartMenuOpen(false);
-      setTimeout(() => setInitialAnimDone(true), 1200);
+      setDesktopReveal(true);
     }
   }, [bootDone]);
 
@@ -450,19 +415,23 @@ export default function App() {
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume]);
 
-  // ── Responsive sizing ──
+  // ── Responsive sizing for visible windows ──
   useEffect(() => {
     const updateSizes = () => {
-      const l = calcLayout(window.innerWidth, window.innerHeight);
+      const vw = window.innerWidth;
+      const vh = window.innerHeight - TASKBAR_H;
       setWindows(prev => {
         const next = {};
         for (const key of Object.keys(prev)) {
           next[key] = { ...prev[key] };
         }
-        for (const id of WIN_IDS) {
-          if (next[id].visible) {
-            next[id] = { ...next[id], x: l[id].x, y: l[id].y, w: l[id].w, h: l[id].h };
-          }
+        if (next['win-about'].visible) {
+          next['win-about'] = {
+            ...next['win-about'],
+            x: Math.round(vw * 0.02),
+            w: Math.round(vw * 0.25),
+            h: vh,
+          };
         }
         return next;
       });
@@ -487,9 +456,9 @@ export default function App() {
         { label: 'View', onClick: () => showNotif() },
       ],
       'win-blog': [
-        { label: 'New Post',  onClick: () => showNotif('// new post: not implemented') },
-        { label: 'Archive',   onClick: () => showNotif() },
-        { label: 'Tags',      onClick: () => showNotif() },
+        { label: 'New Post',  onClick: () => showNotif('// create a .md file in src/blog/ to publish') },
+        { label: 'Archive',   onClick: () => showNotif('// showing all posts (sorted by date)') },
+        { label: 'Tags',      onClick: () => showNotif('// click a tag in the list to filter') },
       ],
       'win-music': null,
     };
@@ -510,9 +479,10 @@ export default function App() {
         { text: 'UTF-8' },
       ],
       'win-blog': [
-        { text: '6 posts', className: 'status-seg' },
+        { text: `${posts.length} posts`, className: 'status-seg' },
         { text: 'read_only: false', className: 'status-seg' },
-        { text: 'latest: 2025.06.07' },
+        { text: `latest: ${posts[0]?.date || '---'}`, className: 'status-seg' },
+        { text: `${import.meta.env.DEV ? 'dev' : 'prod'}`, className: '' },
       ],
       'win-music': [
         { text: playing ? 'PLAYING' : 'PAUSED', className: 'status-seg c-red' },
@@ -540,7 +510,7 @@ export default function App() {
         <div className="c-dim">Open on a desktop computer for the full effect.</div>
       </div>
 
-      <div id="desktop" onClick={handleDesktopClick}>
+      <div id="desktop" className={desktopReveal ? 'desktop-reveal' : ''} onClick={handleDesktopClick}>
         <div id="wallpaper">
           <img
             src="/assets/SnapInsta.to_AQP6ityFpUZrqTmrQLvEfDJDLAQZ4IymuY53NRO4PN-QJhqHphA2zinPKk_myDBZjalUVKln64QGcWrenJJqa8UqeibABN51CJXzfv4.gif"
@@ -558,7 +528,6 @@ export default function App() {
           visible={w['win-home'].visible}
           focused={w['win-home'].focused}
           zIndex={w['win-home'].zIndex}
-          powerOn={!initialAnimDone}
           onFocus={focusWindow}
           onClose={closeWindow}
           onMinimize={minimizeWindow}
@@ -583,7 +552,6 @@ export default function App() {
           visible={w['win-about'].visible}
           focused={w['win-about'].focused}
           zIndex={w['win-about'].zIndex}
-          powerOn={!initialAnimDone}
           onFocus={focusWindow}
           onClose={closeWindow}
           onMinimize={minimizeWindow}
@@ -620,7 +588,6 @@ export default function App() {
             visible={w['win-music'].visible}
             focused={w['win-music'].focused}
             zIndex={w['win-music'].zIndex}
-            powerOn={!initialAnimDone}
             onFocus={focusWindow}
             onClose={closeWindow}
             onMinimize={minimizeWindow}
@@ -657,9 +624,9 @@ export default function App() {
           visible={w['win-dump'].visible}
           focused={w['win-dump'].focused}
           zIndex={w['win-dump'].zIndex}
-          powerOn={!initialAnimDone}
           onFocus={focusWindow}
           onClose={closeWindow}
+          onMinimize={minimizeWindow}
           onMove={moveWindow}
           onResize={resizeWindow}
         />
@@ -673,7 +640,6 @@ export default function App() {
           visible={w['win-term'].visible}
           focused={w['win-term'].focused}
           zIndex={w['win-term'].zIndex}
-          powerOn={!initialAnimDone}
           onFocus={focusWindow}
           onClose={closeWindow}
           onMinimize={minimizeWindow}
@@ -709,9 +675,9 @@ export default function App() {
           visible={w['win-scope'].visible}
           focused={w['win-scope'].focused}
           zIndex={w['win-scope'].zIndex}
-          powerOn={!initialAnimDone}
           onFocus={focusWindow}
           onClose={closeWindow}
+          onMinimize={minimizeWindow}
           onMove={moveWindow}
           onResize={resizeWindow}
           audioElement={audioRef.current}

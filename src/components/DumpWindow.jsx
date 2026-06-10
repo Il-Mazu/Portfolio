@@ -6,7 +6,7 @@ const imageList = Object.values(imageModules).map(m => m.default || m);
 export default function DumpWindow({
   id, x, y, width, height,
   visible, focused, zIndex,
-  powerOn, onFocus, onClose, onMove, onResize,
+  onFocus, onClose, onMinimize, onMove, onResize,
 }) {
   const [currentIndex, setCurrentIndex] = useState(null);
   const winRef = useRef(null);
@@ -101,7 +101,7 @@ export default function DumpWindow({
     <div
       ref={winRef}
       id={id}
-      className={`window ${focused ? 'focused' : ''}${powerOn ? ' crt-power-on' : ''}`}
+      className={`window ${focused ? 'focused' : ''}`}
       style={{ left: x, top: y, width, height: height || undefined, zIndex }}
       onMouseDown={handleMouseDown}
     >
@@ -109,6 +109,7 @@ export default function DumpWindow({
         <div className="titlebar-icon" />
         <span className="titlebar-title">dump/ — BIN</span>
         <div className="win-buttons">
+          <div className="win-btn minimize" onClick={() => onMinimize(id)}>_</div>
           <div className="win-btn close" onClick={() => onClose(id)}>×</div>
         </div>
       </div>
