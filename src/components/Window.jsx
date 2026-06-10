@@ -1,7 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
 
-const RESIZE_MARGIN = 6;
-
 export default function Window({
   id, title, x, y, width, height,
   visible, focused, zIndex,

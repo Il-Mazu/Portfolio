@@ -249,15 +249,6 @@ export default function App() {
     return () => window.removeEventListener('mazu-notif', handler);
   }, [showNotif]);
 
-  // ── Glitch ──
-  const triggerGlitch = useCallback(() => {
-    setWindows(prev => {
-      const focusedId = Object.keys(prev).find(id => prev[id].focused);
-      if (!focusedId) return prev;
-      return prev; // glitch effect handled in component
-    });
-  }, []);
-
   // ── Glitch engine ──
   useEffect(() => {
     if (!glitchEnabled) return;
