@@ -42,7 +42,7 @@ function gitInfoPlugin() {
 function dumpImagesPlugin() {
   const VIRTUAL_ID = 'virtual:dump-images';
   const RESOLVED_ID = '\0' + VIRTUAL_ID;
-  const dumpDir = path.resolve(__dirname, 'assets/Dump');
+  const dumpDir = path.resolve(__dirname, 'public/Dump');
   const exts = ['.jpeg', '.jpg', '.png', '.gif', '.webp'];
 
   function scanImages() {
@@ -55,7 +55,7 @@ function dumpImagesPlugin() {
     return files
       .filter(f => exts.includes(path.extname(f).toLowerCase()))
       .sort()
-      .map(f => `/assets/Dump/${f}`);
+      .map(f => `/Dump/${f}`);
   }
 
   return {

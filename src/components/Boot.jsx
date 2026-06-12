@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
-import bootSound from '../../assets/Old 90s PC boot sequence (4K) [692Z_adAsMQ].mp3';
+import bootSound from '../../assets/boot-sound.mp3';
 import { fadeOut } from '../utils/audio';
 
 const bootMsgs = [

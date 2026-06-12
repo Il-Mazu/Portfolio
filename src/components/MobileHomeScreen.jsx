@@ -86,7 +86,7 @@ export default function MobileHomeScreen({
     <div className="mobile-home">
       <div className="mobile-home-wallpaper">
         <img
-          src="/assets/SnapInsta.to_AQP6ityFpUZrqTmrQLvEfDJDLAQZ4IymuY53NRO4PN-QJhqHphA2zinPKk_myDBZjalUVKln64QGcWrenJJqa8UqeibABN51CJXzfv4.gif"
+          src="/assets/wallpaper.gif"
           alt=""
           draggable={false}
         />

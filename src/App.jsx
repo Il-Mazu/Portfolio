@@ -21,19 +21,19 @@ import MobileLayout from './components/MobileLayout';
 import { commits, remote, buildDate } from 'virtual:git-info';
 import { images as dumpImages } from 'virtual:dump-images';
 import { posts } from './blog/posts';
-import ambientSound from '../assets/ASMR - Alien： Isolation - Nap Time near a Computer Console - Ambient Sounds - NO Aliens Aboard! [rPMG0PLmh9s].mp3';
-import macSound from '../assets/Mac OS startup sound Big Sur [coxK3eWG20c].mp3';
+import ambientSound from '../assets/ambient-sound.mp3';
+import macSound from '../assets/mac-startup.mp3';
 import { fadeIn, fadeOut } from './utils/audio';
-import track0 from '../assets/Musica/00 - AKIBA - カガミ.mp3';
-import track1 from '../assets/Musica/00 - Goreshit - Fine Night.mp3';
-import track2 from '../assets/Musica/00 - Machine Girl - Ghost.mp3';
-import track3 from '../assets/Musica/00 - Machine Girl - うずまき.mp3';
-import track4 from '../assets/Musica/00 - Sewerslvt - Mr. Kill Myself.mp3';
-import cover0 from '../assets/covers/00 - AKIBA - カガミ.jpg';
-import cover1 from '../assets/covers/00 - Goreshit - Fine Night.jpg';
-import cover2 from '../assets/covers/00 - Machine Girl - Ghost.jpg';
-import cover3 from '../assets/covers/00 - Machine Girl - うずまき.jpg';
-import cover4 from '../assets/covers/00 - Sewerslvt - Mr. Kill Myself.jpg';
+import track0 from '../assets/Musica/akiba-kagami.mp3';
+import track1 from '../assets/Musica/goreshit-fine-night.mp3';
+import track2 from '../assets/Musica/machine-girl-ghost.mp3';
+import track3 from '../assets/Musica/machine-girl-uzumaki.mp3';
+import track4 from '../assets/Musica/sewerslvt-mr-kill-myself.mp3';
+import cover0 from '../assets/covers/akiba-kagami.jpg';
+import cover1 from '../assets/covers/goreshit-fine-night.jpg';
+import cover2 from '../assets/covers/machine-girl-ghost.jpg';
+import cover3 from '../assets/covers/machine-girl-uzumaki.jpg';
+import cover4 from '../assets/covers/sewerslvt-mr-kill-myself.jpg';
 
 const TASKBAR_H = 40;
 const AMBIENT_VOL = 0.06;
@@ -569,7 +569,7 @@ export default function App() {
         <Suspense fallback={null}>
         <div id="wallpaper">
           <img
-            src="/assets/SnapInsta.to_AQP6ityFpUZrqTmrQLvEfDJDLAQZ4IymuY53NRO4PN-QJhqHphA2zinPKk_myDBZjalUVKln64QGcWrenJJqa8UqeibABN51CJXzfv4.gif"
+            src="/assets/wallpaper.gif"
             alt="wallpaper"
             draggable={false}
           />

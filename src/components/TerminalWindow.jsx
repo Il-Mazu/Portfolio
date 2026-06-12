@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 const termCmds = {
   help:    '// available: help, about, ls, date, clear, echo [text], glitch, sysinfo, fastfetch, cmatrix',
   about:   '// mazu-space \u2014 my little corner of the internet.',
-  ls:      'about.txt\nblog.txt\nplayer.exe\ndump/',
+  ls:      'about.txt\nblog.txt\nplayer.exe\ndump/\nscope.exe',
   sysinfo: `// mazu-space OS v0.2.0\n// arch: x86\n// mem: 64MB\n// net: loopback\n// uptime: unknown`,
 };
 
@@ -39,7 +39,7 @@ const MATRIX_CHARS = '\u30a2\u30a4\u30a6\u30a8\u30aa\u30ab\u30ad\u30af\u30b1\u30
 export default function TerminalWindow({ onGlitch, onOpen, startupCmd }) {
   const [lines, setLines] = useState([
     { html: '<span class="c-dim">mazu-space OS [v0.2.0]</span>' },
-    { html: '<span class="c-dim">\u00a9 2025 mazu</span>' },
+    { html: '<span class="c-dim">\u00a9 2026 mazu</span>' },
     { html: '<br/>' },
   ]);
   const [input, setInput] = useState('');
@@ -82,12 +82,10 @@ export default function TerminalWindow({ onGlitch, onOpen, startupCmd }) {
       if (onGlitch) setTimeout(onGlitch, 50);
     } else if (lower === 'fastfetch') {
       response = buildFastfetch();
+    } else if (lower === 'date') {
+      response = '// ' + new Date().toLocaleDateString('en-GB');
     } else if (termCmds[lower]) {
-      if (lower === 'date') {
-        response = '// ' + new Date().toLocaleDateString('en-GB');
-      } else {
-        response = termCmds[lower];
-      }
+      response = termCmds[lower];
     } else if (fileMap[lower]) {
       response = '// opening ' + trimmed + '...';
       if (onOpen) setTimeout(() => onOpen(fileMap[lower]), 50);
@@ -98,7 +96,7 @@ export default function TerminalWindow({ onGlitch, onOpen, startupCmd }) {
     setLines(prev => [...prev,
       { html: '<span class="c-dim">\u2014\u2014</span>' },
       { html: '<span class="c-accent">C:\\&gt;</span> ' + trimmed },
-      { html: response.replace(/\n/g, '<br/>') + '<br/>' },
+      { html: '<br/>' + response.replace(/\n/g, '<br/>') + '<br/>' },
     ]);
   }, [onGlitch, onOpen]);
 
